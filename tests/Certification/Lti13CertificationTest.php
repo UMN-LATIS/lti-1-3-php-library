@@ -1,65 +1,85 @@
-<?php namespace Certification;
+<?php
+
+namespace Certification;
 
 use Carbon\Carbon;
 use Firebase\JWT\JWT;
-use PHPUnit\Framework\TestCase;
-use Packback\Lti1p3\{
-    JwksEndpoint,
-    LtiConstants,
-    LtiDeployment,
-    LtiException,
-    LtiMessageLaunch,
-    LtiOidcLogin,
-    LtiRegistration,
-};
-use Packback\Lti1p3\Interfaces\{
-    Cache,
-    Cookie,
-    Database
-};
+use GuzzleHttp\Psr7\Response;
+use Mockery;
+use Packback\Lti1p3\Interfaces\ICache;
+use Packback\Lti1p3\Interfaces\ICookie;
+use Packback\Lti1p3\Interfaces\IDatabase;
+use Packback\Lti1p3\Interfaces\ILtiServiceConnector;
+use Packback\Lti1p3\JwksEndpoint;
+use Packback\Lti1p3\LtiConstants;
+use Packback\Lti1p3\LtiDeployment;
+use Packback\Lti1p3\LtiException;
+use Packback\Lti1p3\LtiMessageLaunch;
+use Packback\Lti1p3\LtiOidcLogin;
+use Packback\Lti1p3\LtiRegistration;
+use Tests\TestCase;
 
-class TestCache implements Cache
+class TestCache implements ICache
 {
     private $launchData = [];
     private $nonce;
-    public function getLaunchData($key)
+
+    public function getLaunchData(string $key): ?array
     {
         return $this->launchData[$key] ?? null;
     }
-    public function cacheLaunchData($key, $jwt_body)
+
+    public function cacheLaunchData(string $key, array $jwtBody): void
     {
-        $this->launchData[$key] = $jwt_body;
-        return $this;
+        $this->launchData[$key] = $jwtBody;
     }
-    public function cacheNonce($nonce)
+
+    public function cacheNonce(string $nonce, string $state): void
     {
-        $this->nonce = $nonce;
+        $this->nonce = $state;
     }
-    public function checkNonce($nonce)
+
+    public function checkNonceIsValid(string $nonce, string $state): bool
     {
-        return $this->nonce === $nonce;
+        return $this->nonce === $state;
+    }
+
+    public function cacheAccessToken(string $key, string $accessToken): void
+    {
+        $this->launchData[$key] = $accessToken;
+    }
+
+    public function getAccessToken(string $key): ?string
+    {
+        return $this->launchData[$key] ?? null;
+    }
+
+    public function clearAccessToken(string $key): void
+    {
+        $this->launchData[$key] = null;
     }
 }
 
-class TestCookie implements Cookie
+class TestCookie implements ICookie
 {
     private $cookies = [];
-    public function getCookie($name)
+
+    public function getCookie(string $name): ?string
     {
         return $this->cookies[$name];
     }
 
-    public function setCookie($name, $value, $exp = 3600, $options = [])
+    public function setCookie(string $name, string $value, $exp = 3600, $options = []): void
     {
         $this->cookies[$name] = $value;
-        return $this;
     }
 }
 
-class TestDb implements Database
+class TestDb implements IDatabase
 {
     private $registrations = [];
     private $deplomyments = [];
+
     public function __construct($registration, $deployment)
     {
         $this->registrations[$registration->getIssuer()] = $registration;
@@ -79,12 +99,12 @@ class TestDb implements Database
 
 class Lti13CertificationTest extends TestCase
 {
-    const ISSUER_URL = 'https://ltiadvantagevalidator.imsglobal.org';
-    const JWKS_FILE = '/tmp/jwks.json';
-    const CERT_DATA_DIR = __DIR__ . '/../data/certification/';
-    const PRIVATE_KEY = __DIR__.'/../data/private.key';
+    public const ISSUER_URL = 'https://ltiadvantagevalidator.imsglobal.org';
+    public const JWKS_FILE = '/tmp/jwks.json';
+    public const CERT_DATA_DIR = __DIR__.'/../data/certification/';
+    public const PRIVATE_KEY = __DIR__.'/../data/private.key';
 
-    const STATE = 'state';
+    public const STATE = 'state';
 
     private $issuer;
     private $key;
@@ -100,14 +120,14 @@ class Lti13CertificationTest extends TestCase
             'alg' => 'RS256',
             'key_set_url' => static::JWKS_FILE,
             'kid' => 'key-id',
-            'tool_private_key' => file_get_contents(static::PRIVATE_KEY)
+            'tool_private_key' => file_get_contents(static::PRIVATE_KEY),
         ];
 
         $this->key = [
             'version' => LtiConstants::V1_3,
             'issuer_id' => $this->issuer['id'],
             'deployment_id' => 'testdeploy',
-            'campus_id' => 1
+            'campus_id' => 1,
         ];
 
         $this->payload = [
@@ -115,9 +135,9 @@ class Lti13CertificationTest extends TestCase
             LtiConstants::VERSION => LtiConstants::V1_3,
             LtiConstants::RESOURCE_LINK => [
                 'id' => 'd3a2504bba5184799a38f141e8df2335cfa8206d',
-                'description' => NULL,
-                'title' => NULL,
-                'validation_context' => NULL,
+                'description' => null,
+                'title' => null,
+                'validation_context' => null,
                 'errors' => [
                     'errors' => [],
                 ],
@@ -138,7 +158,7 @@ class Lti13CertificationTest extends TestCase
                 'type' => [
                     LtiConstants::COURSE_OFFERING,
                 ],
-                'validation_context' => NULL,
+                'validation_context' => null,
                 'errors' => [
                     'errors' => [],
                 ],
@@ -148,7 +168,7 @@ class Lti13CertificationTest extends TestCase
                 'name' => 'Packback Engineering',
                 'version' => 'cloud',
                 'product_family_code' => 'canvas',
-                'validation_context' => NULL,
+                'validation_context' => null,
                 'errors' => [
                     'errors' => [],
                 ],
@@ -159,7 +179,7 @@ class Lti13CertificationTest extends TestCase
                 'width' => 800,
                 'return_url' => 'https://canvas.localhost/courses/3/external_content/success/external_tool_redirect',
                 'locale' => 'en',
-                'validation_context' => NULL,
+                'validation_context' => null,
                 'errors' => [
                     'errors' => [],
                 ],
@@ -182,31 +202,23 @@ class Lti13CertificationTest extends TestCase
             new LtiRegistration([
                 'issuer' => static::ISSUER_URL,
                 'clientId' => $this->issuer['client_id'],
-                'keySetUrl' => static::JWKS_FILE
+                'keySetUrl' => static::JWKS_FILE,
             ]),
-            (new LtiDeployment)->setDeploymentId(static::ISSUER_URL)
+            (new LtiDeployment())->setDeploymentId(static::ISSUER_URL)
         );
-        $this->cache = new TestCache;
-        $this->cookie = new TestCookie;
+        $this->cache = new TestCache();
+        $this->cookie = new TestCookie();
         $this->cookie->setCookie(
-            LtiOidcLogin::COOKIE_PREFIX . static::STATE,
+            LtiOidcLogin::COOKIE_PREFIX.static::STATE,
             static::STATE
         );
-    }
-
-    private function login($loginData = null)
-    {
-        $loginData = $loginData ?? [
-            'iss' => $this->issuer['issuer'],
-            'login_hint' => '535fa085f22b4655f48cd5a36a9215f64c062838'
-        ];
-        $loginData['client_id'] = $this->issuer['client_id'];
+        $this->serviceConnector = Mockery::mock(ILtiServiceConnector::class);
     }
 
     public function buildJWT($data, $header)
     {
         $jwks = json_encode(JwksEndpoint::new([
-            $this->issuer['kid'] => $this->issuer['tool_private_key']
+            $this->issuer['kid'] => $this->issuer['tool_private_key'],
         ])->getPublicJwks());
         file_put_contents(static::JWKS_FILE, $jwks);
 
@@ -224,23 +236,6 @@ class Lti13CertificationTest extends TestCase
         }
 
         return JWT::encode($data, $this->issuer['tool_private_key'], $alg, $this->issuer['kid']);
-    }
-
-    private function launch($payload)
-    {
-        $jwt = $this->buildJWT($payload, $this->issuer);
-        if (isset($payload['nonce'])) {
-            $this->cache->cacheNonce($payload['nonce']);
-        }
-
-        $params = [
-            'utf8' => '✓',
-            'id_token' => $jwt,
-            'state' => static::STATE,
-        ];
-
-        return LtiMessageLaunch::new($this->db, $this->cache, $this->cookie)
-            ->validate($params);
     }
 
     // tests
@@ -336,7 +331,7 @@ class Lti13CertificationTest extends TestCase
 
     public function testInvalidCertificationCases()
     {
-        $testCasesDir = static::CERT_DATA_DIR . 'invalid';
+        $testCasesDir = static::CERT_DATA_DIR.'invalid';
 
         $testCases = scandir($testCasesDir);
         // Remove . and ..
@@ -346,26 +341,35 @@ class Lti13CertificationTest extends TestCase
         $casesCount = count($testCases);
         $testedCases = 0;
 
+        $request = Mockery::mock(Response::class);
+        $this->serviceConnector->shouldReceive('makeRequest')
+            // All but one invalid cert case get the JWK
+            ->times($casesCount - 1)
+            ->andReturn($request);
+        $this->serviceConnector->shouldReceive('getResponseBody')
+            ->times($casesCount - 1)
+            ->andReturn(json_decode(file_get_contents(static::JWKS_FILE), true));
+
         foreach ($testCases as $testCase) {
-            $testCaseDir = $testCasesDir . DIRECTORY_SEPARATOR . $testCase . DIRECTORY_SEPARATOR;
+            $testCaseDir = $testCasesDir.DIRECTORY_SEPARATOR.$testCase.DIRECTORY_SEPARATOR;
 
             $jwtHeader = null;
-            if (file_exists($testCaseDir . 'header.json')) {
+            if (file_exists($testCaseDir.'header.json')) {
                 $jwtHeader = json_decode(
-                    file_get_contents($testCaseDir . 'header.json'),
+                    file_get_contents($testCaseDir.'header.json'),
                     true
                 );
             }
 
             $payload = json_decode(
-                file_get_contents($testCaseDir . 'payload.json'),
+                file_get_contents($testCaseDir.'payload.json'),
                 true
             );
 
             $keep = null;
-            if (file_exists($testCaseDir . 'keep.json')) {
+            if (file_exists($testCaseDir.'keep.json')) {
                 $keep = json_decode(
-                    file_get_contents($testCaseDir . 'keep.json'),
+                    file_get_contents($testCaseDir.'keep.json'),
                     true
                 );
             }
@@ -378,11 +382,11 @@ class Lti13CertificationTest extends TestCase
             }
 
             // I couldn't find a better output function
-            echo PHP_EOL."--> TESTING INVALID TEST CASE: $testCase";
+            echo PHP_EOL."--> TESTING INVALID TEST CASE: {$testCase}";
 
             $jwt = $this->buildJWT($payload, $this->issuer, $jwtHeader);
             if (isset($payload['nonce'])) {
-                $this->cache->cacheNonce($payload['nonce']);
+                $this->cache->cacheNonce($payload['nonce'], static::STATE);
             }
 
             $params = [
@@ -392,13 +396,13 @@ class Lti13CertificationTest extends TestCase
             ];
 
             try {
-                LtiMessageLaunch::new($this->db, $this->cache, $this->cookie)
+                LtiMessageLaunch::new($this->db, $this->cache, $this->cookie, $this->serviceConnector)
                     ->validate($params);
             } catch (\Exception $e) {
                 $this->assertInstanceOf(LtiException::class, $e);
             }
 
-            $testedCases++;
+            ++$testedCases;
         }
         echo PHP_EOL;
         $this->assertEquals($casesCount, $testedCases);
@@ -406,7 +410,7 @@ class Lti13CertificationTest extends TestCase
 
     public function testValidCertificationCases()
     {
-        $testCasesDir = static::CERT_DATA_DIR . 'valid';
+        $testCasesDir = static::CERT_DATA_DIR.'valid';
 
         $testCases = scandir($testCasesDir);
         // Remove . and ..
@@ -418,7 +422,7 @@ class Lti13CertificationTest extends TestCase
 
         foreach ($testCases as $testCase) {
             $payload = json_decode(
-                file_get_contents($testCasesDir . DIRECTORY_SEPARATOR . $testCase . DIRECTORY_SEPARATOR . 'payload.json'),
+                file_get_contents($testCasesDir.DIRECTORY_SEPARATOR.$testCase.DIRECTORY_SEPARATOR.'payload.json'),
                 true
             );
 
@@ -430,10 +434,10 @@ class Lti13CertificationTest extends TestCase
             $payload['sub'] = 'lms-user-id';
 
             // I couldn't find a better output function
-            echo PHP_EOL."--> TESTING VALID TEST CASE: $testCase";
+            echo PHP_EOL."--> TESTING VALID TEST CASE: {$testCase}";
 
             $jwt = $this->buildJWT($payload, $this->issuer);
-            $this->cache->cacheNonce($payload['nonce']);
+            $this->cache->cacheNonce($payload['nonce'], static::STATE);
 
             $params = [
                 'utf8' => '✓',
@@ -441,15 +445,53 @@ class Lti13CertificationTest extends TestCase
                 'state' => static::STATE,
             ];
 
-            $result = LtiMessageLaunch::new($this->db, $this->cache, $this->cookie)
+            $request = Mockery::mock(Response::class);
+            $this->serviceConnector->shouldReceive('makeRequest')
+                ->once()->andReturn($request);
+            $this->serviceConnector->shouldReceive('getResponseBody')
+                ->once()->andReturn(json_decode(file_get_contents(static::JWKS_FILE), true));
+
+            $result = LtiMessageLaunch::new($this->db, $this->cache, $this->cookie, $this->serviceConnector)
                 ->validate($params);
 
             // Assertions
             $this->assertInstanceOf(LtiMessageLaunch::class, $result);
 
-            $testedCases++;
+            ++$testedCases;
         }
         echo PHP_EOL;
         $this->assertEquals($casesCount, $testedCases);
+    }
+
+    private function login($loginData = null)
+    {
+        $loginData = $loginData ?? [
+            'iss' => $this->issuer['issuer'],
+            'login_hint' => '535fa085f22b4655f48cd5a36a9215f64c062838',
+        ];
+        $loginData['client_id'] = $this->issuer['client_id'];
+    }
+
+    private function launch($payload)
+    {
+        $jwt = $this->buildJWT($payload, $this->issuer);
+        if (isset($payload['nonce'])) {
+            $this->cache->cacheNonce($payload['nonce'], static::STATE);
+        }
+
+        $params = [
+            'utf8' => '✓',
+            'id_token' => $jwt,
+            'state' => static::STATE,
+        ];
+
+        $request = Mockery::mock(Response::class);
+        $this->serviceConnector->shouldReceive('makeRequest')
+            ->once()->andReturn($request);
+        $this->serviceConnector->shouldReceive('getResponseBody')
+            ->once()->andReturn(json_decode(file_get_contents(static::JWKS_FILE), true));
+
+        return LtiMessageLaunch::new($this->db, $this->cache, $this->cookie, $this->serviceConnector)
+            ->validate($params);
     }
 }

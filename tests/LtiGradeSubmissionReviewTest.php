@@ -1,6 +1,6 @@
-<?php namespace Tests;
+<?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests;
 
 use Packback\Lti1p3\LtiGradeSubmissionReview;
 
@@ -8,7 +8,7 @@ class LtiGradeSubmissionReviewTest extends TestCase
 {
     public function setUp(): void
     {
-        $this->gradeReview = new LtiGradeSubmissionReview;
+        $this->gradeReview = new LtiGradeSubmissionReview();
     }
 
     public function testItInstantiates()

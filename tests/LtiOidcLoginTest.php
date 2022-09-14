@@ -1,11 +1,12 @@
-<?php namespace Tests;
+<?php
+
+namespace Tests;
 
 use Mockery;
-use PHPUnit\Framework\TestCase;
-
-use Packback\Lti1p3\Interfaces\Cache;
-use Packback\Lti1p3\Interfaces\Cookie;
-use Packback\Lti1p3\Interfaces\Database;
+use Packback\Lti1p3\Interfaces\ICache;
+use Packback\Lti1p3\Interfaces\ICookie;
+use Packback\Lti1p3\Interfaces\IDatabase;
+use Packback\Lti1p3\LtiMessageLaunch;
 use Packback\Lti1p3\LtiOidcLogin;
 use Packback\Lti1p3\OidcException;
 
@@ -13,9 +14,9 @@ class LtiOidcLoginTest extends TestCase
 {
     public function setUp(): void
     {
-        $this->cache = Mockery::mock(Cache::class);
-        $this->cookie = Mockery::mock(Cookie::class);
-        $this->database = Mockery::mock(Database::class);
+        $this->cache = Mockery::mock(ICache::class);
+        $this->cookie = Mockery::mock(ICookie::class);
+        $this->database = Mockery::mock(IDatabase::class);
 
         $this->oidcLogin = new LtiOidcLogin(
             $this->database,
@@ -46,7 +47,7 @@ class LtiOidcLoginTest extends TestCase
         $request = [
             'iss' => 'Issuer',
             'login_hint' => 'LoginHint',
-            'client_id' => 'ClientId'
+            'client_id' => 'ClientId',
         ];
 
         $this->database->shouldReceive('findRegistrationByIssuer')
@@ -62,7 +63,7 @@ class LtiOidcLoginTest extends TestCase
     {
         $request = [
             'login_hint' => 'LoginHint',
-            'client_id' => 'ClientId'
+            'client_id' => 'ClientId',
         ];
 
         $this->expectException(OidcException::class);
@@ -75,7 +76,7 @@ class LtiOidcLoginTest extends TestCase
     {
         $request = [
             'iss' => 'Issuer',
-            'client_id' => 'ClientId'
+            'client_id' => 'ClientId',
         ];
 
         $this->expectException(OidcException::class);
@@ -84,6 +85,10 @@ class LtiOidcLoginTest extends TestCase
         $this->oidcLogin->validateOidcLogin($request);
     }
 
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
     public function testValidatesFailsIfRegistrationNotFound()
     {
         $request = [
@@ -93,13 +98,19 @@ class LtiOidcLoginTest extends TestCase
         $this->database->shouldReceive('findRegistrationByIssuer')
             ->once()->andReturn(null);
 
+        // Use an alias to mock LtiMessageLaunch::getMissingRegistrationErrorMsg()
+        $expectedError = 'Registration not found!';
+        Mockery::mock('alias:'.LtiMessageLaunch::class)
+            ->shouldReceive('getMissingRegistrationErrorMsg')
+            ->andReturn($expectedError);
+
         $this->expectException(OidcException::class);
-        $this->expectExceptionMessage(LtiOidcLogin::ERROR_MSG_REGISTRATION);
+        $this->expectExceptionMessage($expectedError);
 
         $this->oidcLogin->validateOidcLogin($request);
     }
 
-    /**
+    /*
      * @todo Finish testing
      */
 }

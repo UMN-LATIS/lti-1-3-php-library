@@ -1,4 +1,5 @@
 <?php
+
 namespace Packback\Lti1p3;
 
 class LtiGrade
@@ -11,7 +12,6 @@ class LtiGrade
     private $timestamp;
     private $user_id;
     private $submission_review;
-    private $custom = [];
 
     public function __construct(array $grade = null)
     {
@@ -23,12 +23,32 @@ class LtiGrade
         $this->timestamp = $grade['timestamp'] ?? null;
         $this->user_id = $grade['userId'] ?? null;
         $this->submission_review = $grade['submissionReview'] ?? null;
+        $this->canvas_extension = $grade['https://canvas.instructure.com/lti/submission'] ?? null;
+    }
+
+    public function __toString()
+    {
+        // Additionally, includes the call back to filter out only NULL values
+        $request = array_filter([
+            'scoreGiven' => $this->score_given,
+            'scoreMaximum' => $this->score_maximum,
+            'comment' => $this->comment,
+            'activityProgress' => $this->activity_progress,
+            'gradingProgress' => $this->grading_progress,
+            'timestamp' => $this->timestamp,
+            'userId' => $this->user_id,
+            'submissionReview' => $this->submission_review,
+            'https://canvas.instructure.com/lti/submission' => $this->canvas_extension,
+        ], '\Packback\Lti1p3\Helpers\Helpers::checkIfNullValue');
+
+        return json_encode($request);
     }
 
     /**
      * Static function to allow for method chaining without having to assign to a variable first.
      */
-    public static function new() {
+    public static function new()
+    {
         return new LtiGrade();
     }
 
@@ -40,6 +60,7 @@ class LtiGrade
     public function setScoreGiven($value)
     {
         $this->score_given = $value;
+
         return $this;
     }
 
@@ -51,6 +72,7 @@ class LtiGrade
     public function setScoreMaximum($value)
     {
         $this->score_maximum = $value;
+
         return $this;
     }
 
@@ -62,6 +84,7 @@ class LtiGrade
     public function setComment($comment)
     {
         $this->comment = $comment;
+
         return $this;
     }
 
@@ -73,6 +96,7 @@ class LtiGrade
     public function setActivityProgress($value)
     {
         $this->activity_progress = $value;
+
         return $this;
     }
 
@@ -84,6 +108,7 @@ class LtiGrade
     public function setGradingProgress($value)
     {
         $this->grading_progress = $value;
+
         return $this;
     }
 
@@ -95,6 +120,7 @@ class LtiGrade
     public function setTimestamp($value)
     {
         $this->timestamp = $value;
+
         return $this;
     }
 
@@ -106,6 +132,7 @@ class LtiGrade
     public function setUserId($value)
     {
         $this->user_id = $value;
+
         return $this;
     }
 
@@ -117,30 +144,21 @@ class LtiGrade
     public function setSubmissionReview($value)
     {
         $this->submission_review = $value;
+
         return $this;
     }
 
-    public function getCustom(): array 
+    public function getCanvasExtension()
     {
-        return $this->custom;
+        return $this->canvas_extension;
     }
 
-    public function setCustom(array $value) {
-        $this->custom = $value;
+    // Custom Extension for Canvas.
+    // https://documentation.instructure.com/doc/api/score.html
+    public function setCanvasExtension($value)
+    {
+        $this->canvas_extension = $value;
+
         return $this;
-    }
-
-    public function __toString()
-    {
-        return json_encode(array_merge(array_filter([
-            'scoreGiven' => 0 + $this->score_given,
-            'scoreMaximum' => 0 + $this->score_maximum,
-            'comment' => $this->comment,
-            'activityProgress' => $this->activity_progress,
-            'gradingProgress' => $this->grading_progress,
-            'timestamp' => $this->timestamp,
-            'userId' => $this->user_id,
-            'submissionReview' => $this->submission_review,
-        ]), $this->custom));
     }
 }

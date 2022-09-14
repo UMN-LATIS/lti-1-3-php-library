@@ -1,29 +1,28 @@
-<?php namespace Tests;
+<?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests;
+
 use Mockery;
-
-use Packback\Lti1p3\Interfaces\LtiRegistrationInterface;
+use Packback\Lti1p3\Interfaces\ILtiRegistration;
 use Packback\Lti1p3\LtiDeepLink;
-use Packback\Lti1p3\Nonce;
 
 class LtiDeepLinkTest extends TestCase
 {
     public function testItInstantiates()
     {
-        $registration = Mockery::mock(LtiRegistrationInterface::class);
+        $registration = Mockery::mock(ILtiRegistration::class);
 
         $deepLink = new LtiDeepLink($registration, 'test', []);
 
         $this->assertInstanceOf(LtiDeepLink::class, $deepLink);
     }
 
-    /**
+    /*
      * @todo Figure out how to test this
      */
     // public function testItGetsJwtResponse()
     // {
-    //     $registration = Mockery::mock(LtiRegistrationInterface::class);
+    //     $registration = Mockery::mock(ILtiRegistration::class);
     //     $registration->shouldReceive('getClientId')
     //         ->once()->andReturn('client_id');
     //     $registration->shouldReceive('getIssuer')

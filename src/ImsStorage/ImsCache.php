@@ -1,52 +1,79 @@
 <?php
+
 namespace Packback\Lti1p3\ImsStorage;
 
-use Packback\Lti1p3\Interfaces\Cache;
+use Packback\Lti1p3\Interfaces\ICache;
 
-class ImsCache implements Cache
+class ImsCache implements ICache
 {
-
     private $cache;
 
-    public function getLaunchData($key)
+    public function getLaunchData(string $key): ?array
     {
         $this->loadCache();
-        return $this->cache[$key];
+
+        return $this->cache[$key] ?? null;
     }
 
-    public function cacheLaunchData($key, $jwtBody)
+    public function cacheLaunchData(string $key, array $jwtBody): void
     {
+        $this->loadCache();
+
         $this->cache[$key] = $jwtBody;
         $this->saveCache();
-        return $this;
     }
 
-    public function cacheNonce($nonce)
-    {
-        $this->cache['nonce'][$nonce] = true;
-        $this->saveCache();
-        return $this;
-    }
-
-    public function checkNonce($nonce)
+    public function cacheNonce(string $nonce, string $state): void
     {
         $this->loadCache();
-        if (!isset($this->cache['nonce'][$nonce])) {
-            return false;
-        }
-        return true;
+
+        $this->cache['nonce'][$nonce] = $state;
+        $this->saveCache();
     }
 
-    private function loadCache() {
-        $cache = file_get_contents(sys_get_temp_dir() . '/lti_cache.txt');
+    public function checkNonceIsValid(string $nonce, string $state): bool
+    {
+        $this->loadCache();
+
+        return isset($this->cache['nonce'][$nonce]) &&
+            $this->cache['nonce'][$nonce] === $state;
+    }
+
+    public function cacheAccessToken(string $key, string $accessToken): void
+    {
+        $this->loadCache();
+
+        $this->cache[$key] = $accessToken;
+        $this->saveCache();
+    }
+
+    public function getAccessToken(string $key): ?string
+    {
+        $this->loadCache();
+
+        return $this->cache[$key] ?? null;
+    }
+
+    public function clearAccessToken(string $key): void
+    {
+        $this->loadCache();
+
+        unset($this->cache[$key]);
+        $this->saveCache();
+    }
+
+    private function loadCache()
+    {
+        $cache = file_get_contents(sys_get_temp_dir().'/lti_cache.txt');
         if (empty($cache)) {
-            file_put_contents(sys_get_temp_dir() . '/lti_cache.txt', '{}');
+            file_put_contents(sys_get_temp_dir().'/lti_cache.txt', '{}');
             $this->cache = [];
         }
         $this->cache = json_decode($cache, true);
     }
 
-    private function saveCache() {
-        file_put_contents(sys_get_temp_dir() . '/lti_cache.txt', json_encode($this->cache));
+    private function saveCache()
+    {
+        file_put_contents(sys_get_temp_dir().'/lti_cache.txt', json_encode($this->cache));
     }
 }

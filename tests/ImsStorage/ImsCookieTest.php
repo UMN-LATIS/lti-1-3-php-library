@@ -1,12 +1,12 @@
-<?php namespace Tests\ImsStorage;
+<?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests\ImsStorage;
 
 use Packback\Lti1p3\ImsStorage\ImsCookie;
+use Tests\TestCase;
 
 class ImsCookieTest extends TestCase
 {
-
     public function testItInstantiates()
     {
         $cookie = new ImsCookie();

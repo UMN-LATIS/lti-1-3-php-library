@@ -1,47 +1,25 @@
 <?php
+
 namespace Packback\Lti1p3;
 
-use Packback\Lti1p3\Interfaces\LtiServiceConnectorInterface;
-
-class LtiNamesRolesProvisioningService
+class LtiNamesRolesProvisioningService extends LtiAbstractService
 {
+    public const CONTENTTYPE_MEMBERSHIPCONTAINER = 'application/vnd.ims.lti-nrps.v2.membershipcontainer+json';
 
-    private $service_connector;
-    private $service_data;
-
-    public function __construct(LtiServiceConnectorInterface $service_connector, array $service_data)
+    public function getScope(): array
     {
-        $this->service_connector = $service_connector;
-        $this->service_data = $service_data;
+        return [LtiConstants::NRPS_SCOPE_MEMBERSHIP_READONLY];
     }
 
-    public function getMembers()
+    public function getMembers(): array
     {
-        $members = [];
+        $request = new ServiceRequest(
+            ServiceRequest::METHOD_GET,
+            $this->getServiceData()['context_memberships_url'],
+            ServiceRequest::TYPE_GET_MEMBERSHIPS
+        );
+        $request->setAccept(static::CONTENTTYPE_MEMBERSHIPCONTAINER);
 
-        $next_page = $this->service_data['context_memberships_url'];
-
-        while ($next_page) {
-            $page = $this->service_connector->makeServiceRequest(
-                [LtiConstants::NRPS_SCOPE_MEMBERSHIP_READONLY],
-                LtiServiceConnector::METHOD_GET,
-                $next_page,
-                null,
-                null,
-                'application/vnd.ims.lti-nrps.v2.membershipcontainer+json'
-            );
-
-            $members = array_merge($members, $page['body']['members']);
-
-            $next_page = false;
-            foreach($page['headers'] as $header) {
-                if (preg_match(LtiServiceConnector::NEXT_PAGE_REGEX, $header, $matches)) {
-                    $next_page = $matches[1];
-                    break;
-                }
-            }
-        }
-
-        return $members;
+        return $this->getAll($request, 'members');
     }
 }

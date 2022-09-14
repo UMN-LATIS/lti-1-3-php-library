@@ -1,15 +1,14 @@
-<?php namespace Tests;
+<?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests;
+
 use Mockery;
-
-use Packback\Lti1p3\Interfaces\Database;
-use Packback\Lti1p3\Interfaces\LtiRegistrationInterface;
+use Packback\Lti1p3\Interfaces\IDatabase;
+use Packback\Lti1p3\Interfaces\ILtiRegistration;
 use Packback\Lti1p3\JwksEndpoint;
 
 class JwksEndpointTest extends TestCase
 {
-
     public function testItInstantiates()
     {
         $jwks = new JwksEndpoint([]);
@@ -26,8 +25,8 @@ class JwksEndpointTest extends TestCase
 
     public function testCreatesANewInstanceFromIssuer()
     {
-        $database = Mockery::mock(Database::class);
-        $registration = Mockery::mock(LtiRegistrationInterface::class);
+        $database = Mockery::mock(IDatabase::class);
+        $registration = Mockery::mock(ILtiRegistration::class);
         $database->shouldReceive('findRegistrationByIssuer')
             ->once()
             ->andReturn($registration);
@@ -45,7 +44,7 @@ class JwksEndpointTest extends TestCase
 
     public function testCreatesANewInstanceFromRegistration()
     {
-        $registration = Mockery::mock(LtiRegistrationInterface::class);
+        $registration = Mockery::mock(ILtiRegistration::class);
         $registration->shouldReceive('getKid')
             ->once()
             ->andReturn('kid');
@@ -61,7 +60,7 @@ class JwksEndpointTest extends TestCase
     public function testItGetsJwksForTheProvidedKeys()
     {
         $jwks = new JwksEndpoint([
-            'kid' => file_get_contents(__DIR__.'/data/private.key')
+            'kid' => file_get_contents(__DIR__.'/data/private.key'),
         ]);
 
         $result = $jwks->getPublicJwks();

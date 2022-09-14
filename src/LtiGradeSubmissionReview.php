@@ -1,4 +1,5 @@
 <?php
+
 namespace Packback\Lti1p3;
 
 class LtiGradeSubmissionReview
@@ -16,11 +17,22 @@ class LtiGradeSubmissionReview
         $this->custom = $gradeSubmission['custom'] ?? null;
     }
 
+    public function __toString()
+    {
+        // Additionally, includes the call back to filter out only NULL values
+        return json_encode(array_filter([
+            'reviewableStatus' => $this->reviewable_status,
+            'label' => $this->label,
+            'url' => $this->url,
+            'custom' => $this->custom,
+        ], '\Packback\Lti1p3\Helpers\Helpers::checkIfNullValue'));
+    }
 
     /**
      * Static function to allow for method chaining without having to assign to a variable first.
      */
-    public static function new() {
+    public static function new()
+    {
         return new LtiGradeSubmissionReview();
     }
 
@@ -32,6 +44,7 @@ class LtiGradeSubmissionReview
     public function setReviewableStatus($value)
     {
         $this->reviewable_status = $value;
+
         return $this;
     }
 
@@ -43,6 +56,7 @@ class LtiGradeSubmissionReview
     public function setLabel($value)
     {
         $this->label = $value;
+
         return $this;
     }
 
@@ -54,6 +68,7 @@ class LtiGradeSubmissionReview
     public function setUrl($url)
     {
         $this->url = $url;
+
         return $this;
     }
 
@@ -65,17 +80,7 @@ class LtiGradeSubmissionReview
     public function setCustom($value)
     {
         $this->custom = $value;
+
         return $this;
     }
-
-    public function __toString()
-    {
-        return json_encode(array_filter([
-            'reviewableStatus' => $this->reviewable_status,
-            'label' => $this->label,
-            'url' => $this->url,
-            'custom' => $this->custom,
-        ]));
-    }
 }
-?>

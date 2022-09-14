@@ -1,4 +1,5 @@
 <?php
+
 namespace Packback\Lti1p3;
 
 class LtiLineitem
@@ -24,10 +25,26 @@ class LtiLineitem
         $this->end_date_time = $lineitem['endDateTime'] ?? null;
     }
 
+    public function __toString()
+    {
+        // Additionally, includes the call back to filter out only NULL values
+        return json_encode(array_filter([
+            'id' => $this->id,
+            'scoreMaximum' => $this->score_maximum,
+            'label' => $this->label,
+            'resourceId' => $this->resource_id,
+            'resourceLinkId' => $this->resource_link_id,
+            'tag' => $this->tag,
+            'startDateTime' => $this->start_date_time,
+            'endDateTime' => $this->end_date_time,
+        ], '\Packback\Lti1p3\Helpers\Helpers::checkIfNullValue'));
+    }
+
     /**
      * Static function to allow for method chaining without having to assign to a variable first.
      */
-    public static function new() {
+    public static function new()
+    {
         return new LtiLineitem();
     }
 
@@ -39,6 +56,7 @@ class LtiLineitem
     public function setId($value)
     {
         $this->id = $value;
+
         return $this;
     }
 
@@ -50,6 +68,7 @@ class LtiLineitem
     public function setLabel($value)
     {
         $this->label = $value;
+
         return $this;
     }
 
@@ -61,6 +80,7 @@ class LtiLineitem
     public function setScoreMaximum($value)
     {
         $this->score_maximum = $value;
+
         return $this;
     }
 
@@ -72,6 +92,7 @@ class LtiLineitem
     public function setResourceId($value)
     {
         $this->resource_id = $value;
+
         return $this;
     }
 
@@ -83,6 +104,7 @@ class LtiLineitem
     public function setResourceLinkId($value)
     {
         $this->resource_link_id = $value;
+
         return $this;
     }
 
@@ -94,6 +116,7 @@ class LtiLineitem
     public function setTag($value)
     {
         $this->tag = $value;
+
         return $this;
     }
 
@@ -105,6 +128,7 @@ class LtiLineitem
     public function setStartDateTime($value)
     {
         $this->start_date_time = $value;
+
         return $this;
     }
 
@@ -116,19 +140,7 @@ class LtiLineitem
     public function setEndDateTime($value)
     {
         $this->end_date_time = $value;
-        return $this;
-    }
 
-    public function __toString()
-    {
-        return json_encode(array_filter([
-            'id' => $this->id,
-            'scoreMaximum' => $this->score_maximum,
-            'label' => $this->label,
-            'resourceId' => $this->resource_id,
-            'tag' => $this->tag,
-            'startDateTime' => $this->start_date_time,
-            'endDateTime' => $this->end_date_time,
-        ]));
+        return $this;
     }
 }

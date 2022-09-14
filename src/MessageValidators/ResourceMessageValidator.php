@@ -1,11 +1,12 @@
 <?php
+
 namespace Packback\Lti1p3\MessageValidators;
 
+use Packback\Lti1p3\Interfaces\IMessageValidator;
 use Packback\Lti1p3\LtiConstants;
 use Packback\Lti1p3\LtiException;
-use Packback\Lti1p3\Interfaces\MessageValidator;
 
-class ResourceMessageValidator implements MessageValidator
+class ResourceMessageValidator implements IMessageValidator
 {
     public function canValidate(array $jwtBody)
     {

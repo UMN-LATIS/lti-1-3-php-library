@@ -1,12 +1,11 @@
-<?php namespace Tests;
+<?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests;
 
 use Packback\Lti1p3\Redirect;
 
 class RedirectTest extends TestCase
 {
-
     public function testItInstantiates()
     {
         $redirect = new Redirect('test');
@@ -24,7 +23,7 @@ class RedirectTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    /**
+    /*
      * @todo Finish testing
      */
 }
