@@ -5,7 +5,7 @@ namespace Packback\Lti1p3;
 use Firebase\JWT\JWT;
 use Packback\Lti1p3\Interfaces\IDatabase;
 use Packback\Lti1p3\Interfaces\ILtiRegistration;
-use phpseclib\Crypt\RSA;
+use phpseclib3\Crypt\RSA;
 
 class JwksEndpoint
 {
