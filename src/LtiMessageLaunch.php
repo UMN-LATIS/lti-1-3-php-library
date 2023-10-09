@@ -451,7 +451,7 @@ class LtiMessageLaunch
 
         // Validate JWT signature
         try {
-            JWT::decode($this->request['id_token'], $public_key, ['RS256']);
+            JWT::decode($this->request['id_token'], $public_key);
         } catch (ExpiredException $e) {
             // Error validating signature.
             throw new LtiException(static::ERR_INVALID_SIGNATURE);
