@@ -12,6 +12,7 @@ class LtiLineitem
     private $tag;
     private $start_date_time;
     private $end_date_time;
+    private ?bool $grades_released;
 
     public function __construct(array $lineitem = null)
     {
@@ -23,6 +24,7 @@ class LtiLineitem
         $this->tag = $lineitem['tag'] ?? null;
         $this->start_date_time = $lineitem['startDateTime'] ?? null;
         $this->end_date_time = $lineitem['endDateTime'] ?? null;
+        $this->grades_released = $lineitem['gradesReleased'] ?? null;
     }
 
     public function __toString()
@@ -37,6 +39,7 @@ class LtiLineitem
             'tag' => $this->tag,
             'startDateTime' => $this->start_date_time,
             'endDateTime' => $this->end_date_time,
+            'gradesReleased' => $this->grades_released,
         ], '\Packback\Lti1p3\Helpers\Helpers::checkIfNullValue'));
     }
 
@@ -140,6 +143,18 @@ class LtiLineitem
     public function setEndDateTime($value)
     {
         $this->end_date_time = $value;
+
+        return $this;
+    }
+
+    public function getGradesReleased(): ?bool
+    {
+        return $this->grades_released;
+    }
+
+    public function setGradesReleased(?bool $value): self
+    {
+        $this->grades_released = $value;
 
         return $this;
     }

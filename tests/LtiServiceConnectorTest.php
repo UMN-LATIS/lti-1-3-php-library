@@ -20,18 +20,22 @@ class LtiServiceConnectorTest extends TestCase
      * @var Mockery\MockInterface
      */
     private $registration;
+
     /**
      * @var Mockery\MockInterface
      */
     private $cache;
+
     /**
      * @var Mockery\MockInterface
      */
     private $client;
+
     /**
      * @var Mockery\MockInterface
      */
     private $response;
+
     /**
      * @var LtiServiceConnector
      */

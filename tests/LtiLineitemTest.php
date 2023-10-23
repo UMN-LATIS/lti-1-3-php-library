@@ -6,6 +6,8 @@ use Packback\Lti1p3\LtiLineitem;
 
 class LtiLineitemTest extends TestCase
 {
+    private LtiLineitem $lineItem;
+
     public function setUp(): void
     {
         $this->lineItem = new LtiLineitem();
@@ -175,6 +177,41 @@ class LtiLineitemTest extends TestCase
         $this->assertEquals($expected, $this->lineItem->getEndDateTime());
     }
 
+    public function testItGetsGradesReleased(): void
+    {
+        $expected = true;
+        $grade = new LtiLineitem(['gradesReleased' => $expected]);
+
+        $result = $grade->getGradesReleased();
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testItSetsGradesReleased(): void
+    {
+        $expected = false;
+
+        $this->lineItem->setGradesReleased($expected);
+
+        $this->assertEquals($expected, $this->lineItem->getGradesReleased());
+    }
+
+    public function testGradesReleasedConstructedNullable(): void
+    {
+        $grade = new LtiLineitem();
+
+        $result = $grade->getGradesReleased();
+
+        $this->assertNull($result);
+    }
+
+    public function testGradesReleasedSetNullable(): void
+    {
+        $this->lineItem->setGradesReleased(null);
+
+        $this->assertNull($this->lineItem->getGradesReleased());
+    }
+
     public function testItCastsFullObjectToString()
     {
         $expected = [
@@ -186,6 +223,7 @@ class LtiLineitemTest extends TestCase
             'tag' => 'Tag',
             'startDateTime' => 'StartDateTime',
             'endDateTime' => 'EndDateTime',
+            'gradesReleased' => true,
         ];
 
         $lineItem = new LtiLineitem($expected);

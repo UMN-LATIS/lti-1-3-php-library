@@ -3,6 +3,7 @@
 namespace Certification;
 
 use Carbon\Carbon;
+use Exception;
 use Firebase\JWT\JWT;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
@@ -78,7 +79,7 @@ class TestCookie implements ICookie
 class TestDb implements IDatabase
 {
     private $registrations = [];
-    private $deplomyments = [];
+    private $deployments = [];
 
     public function __construct($registration, $deployment)
     {
@@ -103,9 +104,7 @@ class Lti13CertificationTest extends TestCase
     public const JWKS_FILE = '/tmp/jwks.json';
     public const CERT_DATA_DIR = __DIR__.'/../data/certification/';
     public const PRIVATE_KEY = __DIR__.'/../data/private.key';
-
     public const STATE = 'state';
-
     private $issuer;
     private $key;
 
@@ -398,11 +397,11 @@ class Lti13CertificationTest extends TestCase
             try {
                 LtiMessageLaunch::new($this->db, $this->cache, $this->cookie, $this->serviceConnector)
                     ->validate($params);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->assertInstanceOf(LtiException::class, $e);
             }
 
-            ++$testedCases;
+            $testedCases++;
         }
         echo PHP_EOL;
         $this->assertEquals($casesCount, $testedCases);
@@ -457,19 +456,10 @@ class Lti13CertificationTest extends TestCase
             // Assertions
             $this->assertInstanceOf(LtiMessageLaunch::class, $result);
 
-            ++$testedCases;
+            $testedCases++;
         }
         echo PHP_EOL;
         $this->assertEquals($casesCount, $testedCases);
-    }
-
-    private function login($loginData = null)
-    {
-        $loginData = $loginData ?? [
-            'iss' => $this->issuer['issuer'],
-            'login_hint' => '535fa085f22b4655f48cd5a36a9215f64c062838',
-        ];
-        $loginData['client_id'] = $this->issuer['client_id'];
     }
 
     private function launch($payload)

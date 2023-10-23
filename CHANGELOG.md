@@ -1,3 +1,15 @@
+## 5.3.2
+
+Fix URL for updating a line item [#89](https://github.com/packbackbooks/lti-1-3-php-library/pull/89).
+
+## 5.3.1
+
+Validate scopes before a request [#86](https://github.com/packbackbooks/lti-1-3-php-library/pull/86).
+
+## 5.3.0
+
+Add `AssignmentGradesService::deleteLineitem()` to update a line item [#83](https://github.com/packbackbooks/lti-1-3-php-library/pull/83).
+
 ## 5.1.7
 
 Add `AssignmentGradesService::updateLineitem()` to update a line item [#58](https://github.com/packbackbooks/lti-1-3-php-library/pull/58).

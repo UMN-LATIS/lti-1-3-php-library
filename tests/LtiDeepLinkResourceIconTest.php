@@ -72,7 +72,7 @@ class LtiDeepLinkResourceIconTest extends TestCase
         $this->assertEquals($expected, $this->deepLinkResourceIcon->getHeight());
     }
 
-    public function testItCastsToArray()
+    public function testItCreatesArray()
     {
         $expected = [
             'url' => $this->imageUrl,

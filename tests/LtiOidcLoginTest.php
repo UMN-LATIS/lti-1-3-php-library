@@ -87,6 +87,7 @@ class LtiOidcLoginTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testValidatesFailsIfRegistrationNotFound()

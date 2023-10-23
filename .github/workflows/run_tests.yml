@@ -6,15 +6,31 @@ on:
     branches:
       - master
 jobs:
-  run-tests:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Install Composer Dependencies
-        run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-suggest \
-            --no-progress --prefer-dist
-      - name: Run tests
-        run: composer test
+      - uses: actions/checkout@v3
+      - uses: "ramsey/composer-install@v2"
       - name: Check style
         run: composer lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php:
+          - "7.4"
+          - "latest"
+    steps:
+      - uses: "actions/checkout@v3"
+      - uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "${{ matrix.php }}"
+      - uses: "ramsey/composer-install@v2"
+        with:
+          dependency-versions: "${{ matrix.dependencies }}"
+          composer-options: "${{ matrix.composer-options }}"
+      - name: Run tests
+        run: composer test
