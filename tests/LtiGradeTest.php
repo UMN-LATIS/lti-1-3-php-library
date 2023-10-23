@@ -232,6 +232,14 @@ class LtiGradeTest extends TestCase
         $this->assertEquals(json_encode($expected), (string) $grade);
     }
 
+    public function testItSetsCustomValues() 
+    {
+        $expected = ["testKey"=>"testValue"];
+        $this->grade->setCustom($expected);
+
+        $this->assertEquals($expected, $this->grade->getCustom());
+    }
+    
     public function testItCastsEmptyObjectToString()
     {
         $this->assertEquals('[]', (string) $this->grade);
