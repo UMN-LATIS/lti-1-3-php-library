@@ -6,6 +6,7 @@ class LtiDeepLinkResourceIframe
 {
     private ?int $width;
     private ?int $height;
+    private ?string $src;
 
     public function __construct(int $width = null, int $height = null)
     {
@@ -42,6 +43,18 @@ class LtiDeepLinkResourceIframe
         return $this->height;
     }
 
+    public function setSrc(?string $src): LtiDeepLinkResourceIframe
+    {
+        $this->src = $src;
+
+        return $this;
+    }
+
+    public function getSrc(): ?string
+    {
+        return $this->src;
+    }
+
     public function toArray(): array
     {
         $iframe = [];
@@ -51,6 +64,9 @@ class LtiDeepLinkResourceIframe
         }
         if (isset($this->height)) {
             $iframe['height'] = $this->height;
+        }
+        if (isset($this->src)) {
+            $iframe['src'] = $this->src;
         }
 
         return $iframe;
