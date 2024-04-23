@@ -45,7 +45,7 @@ class LtiOidcLogin
      * @param  array|string  $request    An array of request parameters. If not set will default to $_REQUEST.
      * @return Redirect returns a redirect object containing the fully formed OIDC login URL
      */
-    public function doOidcLoginRedirect($launch_url, array $request = null)
+    public function doOidcLoginRedirect($launch_url, array $request = null, $usePostMessage = false)
     {
         if ($request === null) {
             $request = $_REQUEST;
@@ -90,6 +90,8 @@ class LtiOidcLogin
             $auth_params['lti_message_hint'] = $request['lti_message_hint'];
         }
 
+        
+
         if (parse_url($registration->getAuthLoginUrl(), PHP_URL_QUERY)) {
             $separator = '&';
         } else {
@@ -98,11 +100,85 @@ class LtiOidcLogin
         $auth_login_return_url = $registration->getAuthLoginUrl().$separator.http_build_query($auth_params, '', '&');
 
         // Return auth redirect.
-        return new Redirect($auth_login_return_url, http_build_query($request, '', '&'));
+        $redirectURL = new Redirect($auth_login_return_url, http_build_query($request, '', '&'));
+
+        if($usePostMessage) {
+            return <<< EOT
+                <script>
+
+                let platformOIDCLoginURL = "{$redirectURL->getRedirectUrl()}";
+                let platformOrigin = new URL(platformOIDCLoginURL).origin;
+                let frameName = "post_message_forwarding";
+                let parent = window.parent || window.opener;
+                let targetFrame = frameName === "_parent" ? parent : parent.frames[frameName];
+
+
+                window.addEventListener('message', function (event) {
+                    // This isn't a message we're expecting
+                    if (typeof event.data !== "object"){
+                        return;
+                    }
+                
+                    // Validate it's the response type you expect
+                    if (event.data.subject !== "lti.put_data.response") {
+                        return;
+                    }
+                
+                    // Validate the message id matches the id you sent
+                    if (event.data.message_id !== "fdafsdafsa") {
+                        // this is not the response you're looking for
+                        return;
+                    }
+                
+                    // Validate that the event's origin is the same as the derived platform origin
+                    // if (event.origin !== platformOrigin) {
+                    //     return;
+                    // }
+                
+                    // handle errors
+                    if (event.data.error){
+                        // handle errors
+                        console.log(event.data.error.code)
+                        console.log(event.data.error.message)
+                        return;
+                    }
+                
+                    // It's the response we expected
+                    // The state and nonce values were successfully stored, redirect to Platform
+                    window.location = platformOIDCLoginURL;
+                });
+
+                targetFrame.postMessage({
+                        "subject": "lti.put_data",
+                        "message_id": "fdafsdafsa",
+                        "key": "state_{$state}",
+                        "value": "{$state}"
+                    } , "*" )
+
+
+                targetFrame.postMessage({
+                        "subject": "lti.put_data",
+                        "message_id": "fdafsdafsa",
+                        "key": "nonce_{$nonce}",
+                        "value": "{$nonce}"
+                    } , "*" )
+                </script>
+            EOT;
+
+        }
+        else {
+            return $redirectURL;
+        }
+
+        
     }
 
+
+   
+
     public function validateOidcLogin($request)
-    {
+    {   
+
         // Validate Issuer.
         if (empty($request['iss'])) {
             throw new OidcException(static::ERROR_MSG_ISSUER, 1);
